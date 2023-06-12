@@ -3,9 +3,8 @@ from . import views
 from django.conf import settings
 from django.conf.urls.static import static
 
-app_name = 'tasks'
-
 urlpatterns = [
-    path('', views.Tasks, name='task_list'),
-    path('new-task/', views.newTask, name='new-task')
+    path('task/', views.TaskView.as_view()),
+    path('task/<int:pk>/', views.TaskDetailView.as_view()),
+    path('task/<int:task_id>/comments/', views.CommentView.as_view(), name='comments')
 ]
