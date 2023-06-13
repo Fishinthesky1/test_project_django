@@ -12,6 +12,7 @@ class TaskViewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    created_at = serializers.DateTimeField(format="%Y-%m-%d")
     class Meta:
         model = Comment
         fields = '__all__'

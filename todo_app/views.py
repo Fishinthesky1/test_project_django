@@ -1,33 +1,29 @@
-from rest_framework. response import Response
-from rest_framework.views import APIView
-
+from rest_framework import generics, permissions
 from .models import Task, Comment
 from .serializers import TaskViewSerializer, TaskDetailViewSerializer, CommentSerializer
+from .service import PaginationTasks
 
 
-class TaskView(APIView):
-    def get(self, request):
-        tasks = Task.objects.all()
-        serializer = TaskViewSerializer(tasks, many=True)
-        return Response(serializer.data)
+class TaskView(generics.ListAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskViewSerializer
+    pagination_class = PaginationTasks
+
+class TaskDetailView(generics.RetrieveAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskDetailViewSerializer
+    lookup_field = 'pk'
 
 
-class TaskDetailView(APIView):
-    def get(self, request, pk):
-        task = Task.objects.get(id=pk)
-        serializer = TaskDetailViewSerializer(task)
-        return Response(serializer.data)
+class CommentView(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+    permission_comment = [permissions.IsAuthenticatedOrReadOnly]
 
+    def get_queryset(self):
+        task_id = self.kwargs['task_id']
+        return Comment.objects.filter(task_id=task_id)
 
-class CommentView(APIView):
-    def get(self, request, task_id):
-        comments = Comment.objects.filter(task_id=task_id)
-        serializer = CommentSerializer(comments, many=True)
-        return Response(serializer.data)
-
-    def post(self, request, task_id):
-        serializer = CommentSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(task_id=task_id)
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
+    def perform_create(self, serializer):
+        task_id = self.kwargs['task_id']
+        task = Task.objects.get(id=task_id)
+        serializer.save(task=task)
