@@ -1,10 +1,19 @@
 from rest_framework import serializers
-from .models import Task, Comment
+from .models import Task, Comment, TimestampedModel
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email')
+
 
 class TaskViewSerializer(serializers.ModelSerializer):
-    author = serializers.StringRelatedField()
+    author = UserSerializer()
     status = serializers.CharField(source='get_status_display')
-
 
     class Meta:
         model = Task
@@ -12,7 +21,7 @@ class TaskViewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    created_at = serializers.DateTimeField(format="%Y-%m-%d")
+
     class Meta:
         model = Comment
         fields = '__all__'
@@ -20,17 +29,16 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class TaskDetailViewSerializer(serializers.ModelSerializer):
     status = serializers.CharField(source='get_status_display')
-    author = serializers.StringRelatedField()
-    users = serializers.SlugRelatedField(slug_field='username', many=True, read_only=True)
+    author = UserSerializer
+    users = UserSerializer(many=True, read_only=True)
     image = serializers.ImageField()
-    create_date = serializers.DateTimeField(format="%Y-%m-%d")
-    update_time = serializers.DateTimeField(format="%Y-%m-%d")
     due_date = serializers.DateTimeField(format="%Y-%m-%d")
     comments = CommentSerializer(many=True)
 
     class Meta:
 
         model = Task
-        fields = "__all__"
+        fields = ('status', 'author', 'users', 'image', 'due_date', 'comments')
+
 
 
